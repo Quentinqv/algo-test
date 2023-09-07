@@ -1,12 +1,4 @@
-# 1 concours par jour
-# Concours consécutifs
-# Gain différent pour chaque concours
-# N concours consécutifs
-# Les concours commencent le 1er du mois
-# Au bout de X concours, on doit s'arrêter pour se reposer
-from time import sleep
-
-# Il faut retirer les jours déjà joués, et ceux connus comme repos. Il faut ensuite recalculer la row la plus intéressante avec ces paramètres.
+# https://lilac-bromine-67e.notion.site/Algo-LEAD-DEV-2120a2fa183047bcbb9bfbef84c9bca6
 
 tests = [
     [
@@ -31,16 +23,17 @@ tests = [
     ]
 ]
 
+
 def getBestXRows(gains, x, forbidden):
     """
-    For now, returning 0, 0, 0 is when no row is possible
+    Best row can't start at pos 1, because the first day has to be play
     :param gains:
     :param x:
     :param forbidden:
     :return:
     """
     if len(gains) == x and len(forbidden) == 0:
-        return sum(gains), 0, x-1
+        return sum(gains), 0, x - 1
 
     copy = gains.copy()
     # replace all forbidden days by -1
@@ -49,10 +42,12 @@ def getBestXRows(gains, x, forbidden):
 
     # Check if a row of x days is possible with the forbidden days
     isPossible = False
-    for i in range(len(gains)-x):
+    for i in range(len(gains) - x):
         if i in forbidden:
             continue
-        if -1 in copy[i:i+x]:
+        if -1 in copy[i:i + x]:
+            continue
+        if i == 1:
             continue
         else:
             isPossible = True
@@ -65,17 +60,17 @@ def getBestXRows(gains, x, forbidden):
     best = 0
     minI = 0
     maxI = 0
-    for i in range(len(gains)-x+1):
-        if i in forbidden:
+    for i in range(len(gains) - x + 1):
+        if i in forbidden or i == 1:
             continue
-        s = sum(gains[i:i+x])
-        print("Sum: {}".format(s) + " - " + str(gains[i:i+x]) + " - " + str(i) + " - " + str(i+x))
+        s = sum(gains[i:i + x])
         if s > best:
             best = s
             minI = i
-            maxI = i+x
+            maxI = i + x
 
-    return best, minI, maxI-1
+    return best, minI, maxI - 1
+
 
 def sumGains(gains, forbidden, alreadyWon):
     """
@@ -85,42 +80,43 @@ def sumGains(gains, forbidden, alreadyWon):
     :return:
     """
     listToSum = []
+    dayPlayed = []
     for i in range(len(gains)):
         if i in forbidden:
             continue
         else:
             listToSum.append(gains[i])
-
+            dayPlayed.append(i+1)
 
     for i in alreadyWon:
         listToSum.append(gains[i])
+        dayPlayed.append(i+1)
 
-    print("List to sum: {}".format(listToSum))
-    return sum(listToSum)
+    dayPlayed.sort()
+    dayPlayed = " > ".join(str(x) for x in dayPlayed)
+    return sum(listToSum), dayPlayed
 
 
-for test in tests:
-    print("Test: {}".format(test))
-    gains = test[0]
-    x = test[1]
-    forbidden = []
-    alreadyWon = []
-    best, minI, maxI = getBestXRows(gains, x, forbidden)
-    while best != 0:
-        print("Best row: {} - {} - {}".format(best, minI, maxI))
-        if minI-1 < len(gains):
-            forbidden.append(minI-1)
-        if maxI+1 < len(gains):
-            forbidden.append(maxI+1)
-        # ajout des jours interdits entre minI et maxI
-        for i in range(minI-1, maxI+1):
-            if i not in forbidden:
-                forbidden.append(i)
-                alreadyWon.append(i)
+def main():
+    for test in tests:
+        print("Test: {}".format(test))
+        gains = test[0]
+        x = test[1]
+        forbidden = []
+        alreadyWon = []
         best, minI, maxI = getBestXRows(gains, x, forbidden)
-        print("Forbidden: {}".format(forbidden))
-        print("Already won: {}".format(alreadyWon))
-        # sleep(2)
-    print("No more rows possible")
-    print("Sum of gains: {}".format(sumGains(gains, forbidden, alreadyWon)))
-    print()
+        while best != 0:
+            if minI - 1 < len(gains):
+                forbidden.append(minI - 1)
+            if maxI + 1 < len(gains):
+                forbidden.append(maxI + 1)
+            for i in range(minI - 1, maxI + 1):
+                if i not in forbidden:
+                    forbidden.append(i)
+                    alreadyWon.append(i)
+            best, minI, maxI = getBestXRows(gains, x, forbidden)
+
+        print("Sum of gains: {}".format(sumGains(gains, forbidden, alreadyWon)))
+        print()
+
+main()
